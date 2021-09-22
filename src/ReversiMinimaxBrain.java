@@ -8,6 +8,8 @@ import vitro.grid.*;
 import java.awt.*;
 import java.util.*;
 
+import static vitro.util.Groups.first;
+
 public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
     private Reversi model;
     private int myTeam;
@@ -23,6 +25,10 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
     }
 
     public Action choose(Reversi.Player actor, Set<Action> options) {
+        // If all we can do is pass, go for it.
+        if (options.size() == 1) {
+            return first(options);
+        }
 
         Action bestAction = null;
         double bestScore = Integer.MIN_VALUE;
@@ -40,41 +46,33 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
     }
 
     public int minimax(Reversi.Player player, Action option) {
-        if ((option instanceof Reversi.Pass) && model.done()) {
+        option.apply();
+
+        if (model.done()) {
+            option.undo();
             return evalLeaf();
         }
 
-        option.apply();
         Reversi.Player nextPlayer = playerHashMap.get(model.team());
         Set<Action> nextMoves = nextPlayer.actions();
 
-        if (myTeam == player.team()) {
-            int bestScore = Integer.MIN_VALUE;
+        int bestScore = Integer.MIN_VALUE;
+        int minScore = Integer.MAX_VALUE;
 
-            for (Action a : nextMoves) {
-                if (!(a instanceof Reversi.Move)) { continue; }
-                int score = minimax(nextPlayer, a);
-                if (score > bestScore) {
-                    bestScore = score;
-                }
+        for (Action a : nextMoves) {
+            if (!(a instanceof Reversi.Move) && nextMoves.size() > 1) { continue; }
+            int score = minimax(nextPlayer, a);
+            if (score > bestScore) {
+                bestScore = score;
             }
 
-            option.undo();
-            return bestScore;
-        } else {
-            int minScore = Integer.MAX_VALUE;
-
-            for (Action a : nextMoves) {
-                if (!(a instanceof Reversi.Move)) { continue; }
-                int score = minimax(nextPlayer, a);
-                if (score < minScore) {
-                    minScore = score;
-                }
+            if (score < minScore) {
+                minScore = score;
             }
-
-            option.undo();
-            return minScore;
         }
+
+        option.undo();
+        return myTeam == player.team() ? bestScore : minScore;
     }
 
     public int evalLeaf() {

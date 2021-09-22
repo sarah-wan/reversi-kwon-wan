@@ -27,8 +27,10 @@ public class ReversiAssignment extends Host {
 		model.actors.add(black);
 		model.actors.add(white);
 
-		controller.bind(black, new ReversiGreedyBrain());
-		controller.bind(white, new ReversiGreedyBrain());
+		controller.bind(black, new ReversiMinimaxBrain(model, Reversi.BLACK));
+		controller.bind(white, new ReversiMinimaxBrain(model, Reversi.WHITE));
+		//controller.bind(black, new ReversiGreedyBrain());
+		//controller.bind(white, new ReversiGreedyBrain());
 
 		show(view);
 	}
