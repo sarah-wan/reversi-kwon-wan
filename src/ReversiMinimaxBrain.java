@@ -6,6 +6,8 @@
 import vitro.*;
 import vitro.grid.*;
 import java.awt.*;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 import static vitro.util.Groups.first;
@@ -46,7 +48,19 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
     }
 
     public int minimax(Reversi.Player player, Action option) {
-        option.apply();
+    	if(option instanceof Reversi.Pass)
+    	{
+    		// If a pass, suppress the output so we don't spam the console
+    		// StackOverflow post (https://stackoverflow.com/questions/8363493/hiding-system-out-print-calls-of-a-class)
+    		PrintStream stdout = System.out;
+    		System.setOut(new PrintStream(new OutputStream(){
+    		    public void write(int b) {}
+		    }));
+    		option.apply();
+    		System.setOut(stdout);
+    	}
+    	else
+    		option.apply();
 
         if (model.done()) {
             option.undo();
