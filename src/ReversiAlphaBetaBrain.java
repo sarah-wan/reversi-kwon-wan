@@ -33,16 +33,25 @@ public class ReversiAlphaBetaBrain implements Agent<Reversi.Player> {
         }
 
         Action bestAction = null;
-        double bestScore = Integer.MIN_VALUE;
+        int bestScore = Integer.MIN_VALUE;
+        int minScore = Integer.MAX_VALUE;
 
+        // Use maxvalue for alpha and min for beta to indicate we don't know any scores yet
+        int alpha = Integer.MAX_VALUE;
+        int beta = Integer.MIN_VALUE;
         for (Action a : options) {
             if (!(a instanceof Reversi.Move)) { continue; }
-            // Use maxvalue for alpha and min for beta to indicate we don't know any scores yet
-            int score = minimax(actor, a, Integer.MAX_VALUE, Integer.MIN_VALUE);
+            int score = minimax(actor, a, alpha, beta);
             if (score > bestScore) {
                 bestScore = score;
                 bestAction = a;
             }
+            if (score < minScore) {
+                minScore = score;
+            }
+            // update alpha and beta values
+            alpha = Integer.min(alpha, minScore);
+            beta = Integer.max(beta, bestScore);
         }
 
         return bestAction;
