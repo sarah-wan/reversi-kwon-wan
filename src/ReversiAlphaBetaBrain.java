@@ -12,12 +12,12 @@ import java.util.*;
 
 import static vitro.util.Groups.first;
 
-public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
+public class ReversiAlphaBetaBrain implements Agent<Reversi.Player> {
     private Reversi model;
     private int myTeam;
     private HashMap<Integer, Reversi.Player> playerHashMap = new HashMap<>();
 
-    ReversiMinimaxBrain(Reversi model, int team) {
+    ReversiAlphaBetaBrain(Reversi model, int team) {
         this.model = model;
         myTeam = team;
 
@@ -33,21 +33,31 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
         }
 
         Action bestAction = null;
-        double bestScore = Integer.MIN_VALUE;
+        int bestScore = Integer.MIN_VALUE;
+        int minScore = Integer.MAX_VALUE;
 
+        // Use maxvalue for alpha and min for beta to indicate we don't know any scores yet
+        int alpha = Integer.MAX_VALUE;
+        int beta = Integer.MIN_VALUE;
         for (Action a : options) {
             if (!(a instanceof Reversi.Move)) { continue; }
-            int score = minimax(actor, a);
+            int score = minimax(actor, a, alpha, beta);
             if (score > bestScore) {
                 bestScore = score;
                 bestAction = a;
             }
+            if (score < minScore) {
+                minScore = score;
+            }
+            // update alpha and beta values
+            alpha = Integer.min(alpha, minScore);
+            beta = Integer.max(beta, bestScore);
         }
 
         return bestAction;
     }
 
-    public int minimax(Reversi.Player player, Action option) {
+    public int minimax(Reversi.Player player, Action option, int alpha, int beta) {
     	if(option instanceof Reversi.Pass)
     	{
     		// If a pass, suppress the output so we don't spam the console
@@ -72,21 +82,33 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
 
         int bestScore = Integer.MIN_VALUE;
         int minScore = Integer.MAX_VALUE;
+        
+        boolean isMaxNode = myTeam == player.team();
 
         for (Action a : nextMoves) {
             if (!(a instanceof Reversi.Move) && nextMoves.size() > 1) { continue; }
-            int score = minimax(nextPlayer, a);
+            int score = minimax(nextPlayer, a, alpha, beta);
+            
+            // Early return through alpha beta pruning
+            if (isMaxNode && score > alpha)
+            	break;
+            else if (!isMaxNode && score < beta)
+            	break;
+            
             if (score > bestScore) {
                 bestScore = score;
             }
-
             if (score < minScore) {
                 minScore = score;
             }
+            
+            // update alpha and beta values
+            alpha = Integer.min(alpha, minScore);
+            beta = Integer.max(beta, bestScore);
         }
 
         option.undo();
-        return myTeam == player.team() ? bestScore : minScore;
+        return isMaxNode ? bestScore : minScore;
     }
 
     public int evalLeaf() {
