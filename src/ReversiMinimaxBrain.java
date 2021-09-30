@@ -16,6 +16,7 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
     private Reversi model;
     private int myTeam;
     private HashMap<Integer, Reversi.Player> playerHashMap = new HashMap<>();
+    private int totalStates = 0;
 
     ReversiMinimaxBrain(Reversi model, int team) {
         this.model = model;
@@ -44,6 +45,7 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
             }
         }
 
+        System.out.println("Player " + myTeam + ": " + totalStates + " states evaluated");
         return bestAction;
     }
 
@@ -96,6 +98,7 @@ public class ReversiMinimaxBrain implements Agent<Reversi.Player> {
             else evaluation -= score.getValue();
         }
 
+        totalStates++;
         return evaluation;
     }
 };

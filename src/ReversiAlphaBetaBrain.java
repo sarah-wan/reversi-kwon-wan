@@ -16,6 +16,7 @@ public class ReversiAlphaBetaBrain implements Agent<Reversi.Player> {
     private Reversi model;
     private int myTeam;
     private HashMap<Integer, Reversi.Player> playerHashMap = new HashMap<>();
+    private int totalStates = 0;
 
     ReversiAlphaBetaBrain(Reversi model, int team) {
         this.model = model;
@@ -54,6 +55,7 @@ public class ReversiAlphaBetaBrain implements Agent<Reversi.Player> {
             beta = Integer.max(beta, bestScore);
         }
 
+        System.out.println("Player " + myTeam + ": " + totalStates + " states evaluated");
         return bestAction;
     }
 
@@ -118,6 +120,7 @@ public class ReversiAlphaBetaBrain implements Agent<Reversi.Player> {
             else evaluation -= score.getValue();
         }
 
+        totalStates++;
         return evaluation;
     }
 };
