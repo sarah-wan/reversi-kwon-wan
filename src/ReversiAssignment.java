@@ -16,7 +16,7 @@ public class ReversiAssignment extends Host {
 
 	public ReversiAssignment() {
 
-		Reversi model                   = new Reversi(4, 4);
+		Reversi model                   = new Reversi(8, 8);
 		SequentialController controller = new SequentialController(model);
 		ReversiView view                = new ReversiView(model, controller, 640, 480, new ColorScheme());
 
@@ -27,8 +27,8 @@ public class ReversiAssignment extends Host {
 		model.actors.add(black);
 		model.actors.add(white);
 
-		controller.bind(black, new ReversiAlphaBetaBrain(model, Reversi.BLACK));
-		controller.bind(white, new ReversiAlphaBetaBrain(model, Reversi.WHITE));
+		controller.bind(black, new ReversiGreedyBrain());
+		controller.bind(white, new ReversiHeuristicBrain(model, Reversi.WHITE, 3));
 		//controller.bind(black, new ReversiMinimaxBrain(model, Reversi.BLACK));
 		//controller.bind(white, new ReversiMinimaxBrain(model, Reversi.WHITE));
 		//controller.bind(black, new ReversiGreedyBrain());

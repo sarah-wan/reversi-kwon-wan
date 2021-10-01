@@ -119,7 +119,7 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
         totalStates++;
 
         //heuristicEval is a weighted avg of heuristics
-        double heuristicEval = .5 * scoreEval() + .5 * stabilityEval() + mobilityEval();
+        double heuristicEval = mobilityEval();
         return heuristicEval;
     }
 
@@ -143,7 +143,7 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
         // Number of moves for me minus number of moves for each opponent
     	int heur = 0;
     	for (Map.Entry<Integer, Reversi.Player> entry : playerHashMap.entrySet()) {
-    		int change = playerHashMap.get(entry.getKey()).actions().size();
+    		int change = entry.getValue().actions().size();
     		if (entry.getKey() == myTeam) {
     			heur += change;
     		} 
