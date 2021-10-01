@@ -135,13 +135,23 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
     }
 
     public double stabilityEval() {
-        //write stability heutistic here
+        //write stability heuristic here
         return 5;
     }
 
     public double mobilityEval() {
-        //write mobility heutistic here
-        return 5;
+        // Number of moves for me minus number of moves for each opponent
+    	int heur = 0;
+    	for (Map.Entry<Integer, Reversi.Player> entry : playerHashMap.entrySet()) {
+    		int change = playerHashMap.get(entry.getKey()).actions().size();
+    		if (entry.getKey() == myTeam) {
+    			heur += change;
+    		} 
+    		else {
+    			heur -= change;
+    		}
+    	}
+        return heur;
     }
 
     public double anotherEval() {
