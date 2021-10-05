@@ -123,15 +123,18 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
         return heuristicEval;
     }
 
-    //returns my score - other pieces
-    public int scoreEval() {
+    public double scoreEval() {
         int evaluation = 0;
+        int total = 0;
+
         for (Map.Entry<Integer,Integer> score : model.scores().entrySet()) {
-            if (score.getKey() == myTeam) { evaluation += score.getValue(); }
-            else evaluation -= score.getValue();
+            total += score.getValue();
+            if (score.getKey() == myTeam) {
+                evaluation += score.getValue();
+            } else evaluation -= score.getValue();
         }
 
-        return evaluation;
+        return evaluation / total;
     }
 
     public double stabilityEval() {
