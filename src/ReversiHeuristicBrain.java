@@ -5,7 +5,7 @@
 
 import vitro.*;
 import vitro.grid.*;
-import java.awt.*;
+
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -18,6 +18,7 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
     private int depth;
     private HashMap<Integer, Reversi.Player> playerHashMap = new HashMap<>();
     private int totalStates = 0;
+    private int totalMoves = 0;
 
     ReversiHeuristicBrain(Reversi model, int team, int depth) {
         this.model = model;
@@ -30,6 +31,8 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
     }
 
     public Action choose(Reversi.Player actor, Set<Action> options) {
+        totalMoves++;
+
         // If all we can do is pass, go for it.
         if (options.size() == 1) {
             return first(options);
@@ -118,8 +121,29 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
     public double evalLeaf() {
         totalStates++;
 
-        //heuristicEval is a weighted avg of heuristics
-        double heuristicEval = mobilityEval();
+        double heuristicEval= 0;
+
+        heuristicEval += 200 * stableCorners();
+
+        if (totalMoves > (model.height * model.width)/ 4.0 ) { //last half of game
+            heuristicEval += 125 * scoreEval();
+        } else {
+            heuristicEval += 75 * scoreEval(); //first half of game
+        }
+
+
+        if (totalMoves > (model.height * model.width)/ 6.0) { // last 2/3 of game
+            heuristicEval += 20 * mobilityEval();
+
+        } else { //very early game strategy: first 1/3 of game
+            heuristicEval += 60 * mobilityEval();
+
+            if (mobilityEval() > 0) {
+                heuristicEval += 40 * frontierEval();
+            }
+            heuristicEval += 15 * xandC();
+        }
+
         return heuristicEval;
     }
 
@@ -134,19 +158,43 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
             } else evaluation -= score.getValue();
         }
 
-        return evaluation / total;
+        return ((double) evaluation) / total;
     }
 
-    public double stabilityEval() {
-        //write stability heuristic here
-        return 5;
+    public double frontierEval() {
+        int myFrontier = 0;
+        int otherFrontier = 0;
+        int[][] deltas = {{-1,1}, {-1,0}, {-1,-1}, {0,1}, {0,-1},{1,1}, {1,0}, {1,-1}};
+        for (Map.Entry<vitro.Actor, vitro.grid.Location> entry : model.locations.entrySet()) {
+            for(int i = 0; i < deltas.length; ++i) {
+                int nx = entry.getValue().x + deltas[i][0];
+                int ny = entry.getValue().y + deltas[i][1];
+                if (nx >= 0 && nx < this.model.width && ny >= 0 && ny < this.model.height) {
+                    Location neighbor = new Location(this.model, nx, ny);
+                    if (model.actorAt(neighbor) == null) {
+                        if (((Reversi.Piece) entry.getKey()).team == myTeam) {
+                            myFrontier++;
+                        } else {
+                            otherFrontier++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (otherFrontier + myFrontier == 0) return 0;
+
+        return myFrontier < otherFrontier ? ((double) myFrontier) / (myFrontier + otherFrontier) :  - ((double) otherFrontier) / (myFrontier + otherFrontier);
     }
 
     public double mobilityEval() {
         // Number of moves for me minus number of moves for each opponent
     	int heur = 0;
+        int sum = 0;
+
     	for (Map.Entry<Integer, Reversi.Player> entry : playerHashMap.entrySet()) {
     		int change = entry.getValue().actions().size();
+            sum += change;
     		if (entry.getKey() == myTeam) {
     			heur += change;
     		} 
@@ -154,22 +202,74 @@ public class ReversiHeuristicBrain implements Agent<Reversi.Player> {
     			heur -= change;
     		}
     	}
-        return heur;
+        return ((double) heur) / sum;
     }
 
-    public double anotherEval() {
-        return 5;
+    public double stableCorners() {
+        if (model.height < 4) return 0;
+
+        int otherCorners = 0;
+        int myCorners = 0;
+
+
+        if (model.height >= 4) {
+            //Corners valued at 50
+            Location[] corners = {new Location(model, 0,0), new Location(model, 0,model.width - 1),
+                    new Location(model, model.height - 1,0),new Location(model, model.height - 1,model.width - 1)};
+            for (Location l : corners) {
+                if (model.actorAt(l) == null) continue;
+
+                if (((Reversi.Piece) model.actorAt(l)).team == myTeam) {
+                    myCorners += 1;
+                } else {
+                    otherCorners += 1;
+                }
+            }
+        }
+
+        if (otherCorners + myCorners == 0) return 0;
+        return myCorners < otherCorners ? - ((double) otherCorners) / (myCorners + otherCorners) : ((double) myCorners) / (myCorners + otherCorners);
     }
 
-    public double anotheranotherEval() {
-        return 5;
-    }
+    public double xandC() {
 
-    public double yetanotherEval() {
-        return 5;
-    }
+        int myScore = 0;
+        int otherScore = 0;
 
-    public double lastEval() {
-        return 5;
+        if (model.height >= 8) {
+            //xPiece valued at -2
+            Location[] xPiece = {new Location(model, 1,1), new Location(model, 1,model.width - 2),
+                    new Location(model, model.height - 2,1),new Location(model, model.height - 2,model.width - 2)};
+            //cPiece valued at -1
+            Location[] cPiece = {new Location(model, 0,1), new Location(model, 1,0),
+                    new Location(model, 0,model.width - 2), new Location(model, 1,model.width - 1),
+                    new Location(model, model.height - 1,1), new Location(model, model.height - 2,0),
+                    new Location(model, model.height - 1,model.width - 2), new Location(model, model.height - 2,model.width - 1)};
+
+            for (Location l : xPiece) {
+                if (model.actorAt(l) == null) continue;
+
+                if (((Reversi.Piece) model.actorAt(l)).team == myTeam) {
+                    myScore += -2;
+                } else {
+                    otherScore += -2;
+                }
+
+            }
+
+            for (Location l : cPiece) {
+                if (model.actorAt(l) == null) continue;
+
+                if (((Reversi.Piece) model.actorAt(l)).team == myTeam) {
+                    myScore += -1;
+                } else {
+                    otherScore += -1;
+                }
+            }
+        }
+
+        if (myScore + otherScore == 0) return 0;
+
+        return myScore > otherScore ? ((double) otherScore) / (myScore + otherScore) : - ((double) myScore) / (myScore + otherScore);
     }
 };

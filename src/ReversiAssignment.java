@@ -10,7 +10,7 @@ public class ReversiAssignment extends Host {
 	
 	private static final long serialVersionUID = 1L;
 	//number of moves AHEAD the heuristic search will consider
-	public static int DEPTH_HEURISTIC_SEARCH = 3;
+	public static int DEPTH_HEURISTIC_SEARCH = 6;
 
 	public static void main(String[] args) {
 		new ReversiAssignment();
@@ -29,13 +29,20 @@ public class ReversiAssignment extends Host {
 		model.actors.add(black);
 		model.actors.add(white);
 
-		controller.bind(black, new ReversiHeuristicBrain(model, Reversi.BLACK, DEPTH_HEURISTIC_SEARCH));
-		//controller.bind(black, new ReversiAlphaBetaBrain(model, Reversi.BLACK));
-		//controller.bind(white, new ReversiAlphaBetaBrain(model, Reversi.WHITE));
+//		controller.bind(black, new ReversiHeuristicBrain(model, Reversi.BLACK, 3));
+//		controller.bind(white, new ReversiHeuristicBrain(model, Reversi.WHITE, 2));
+
+//		controller.bind(black, new ReversiHeuristicBrain(model, Reversi.BLACK, 2));
+//		controller.bind(white, new ReversiHeuristicBrain(model, Reversi.WHITE, 3));
+
+		controller.bind(black, new ReversiAlphaBetaBrain(model, Reversi.BLACK));
+		controller.bind(white, new ReversiAlphaBetaBrain(model, Reversi.WHITE));
+
+
 		//controller.bind(black, new ReversiMinimaxBrain(model, Reversi.BLACK));
 		//controller.bind(white, new ReversiMinimaxBrain(model, Reversi.WHITE));
 		//controller.bind(black, new ReversiGreedyBrain());
-		controller.bind(white, new ReversiGreedyBrain());
+		//controller.bind(white, new ReversiGreedyBrain());
 
 		show(view);
 	}
